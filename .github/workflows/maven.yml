@@ -1,0 +1,45 @@
+name: Java CI with Matrix Strategy
+
+# 1. Định nghĩa sự kiện kích hoạt
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # Thay vì chạy cố định trên ubuntu, ta sử dụng biến từ matrix 
+    runs-on: ${{ matrix.os }}
+
+    # 2. Thiết lập Matrix Strategy để chạy song song trên 3 hệ điều hành [cite: 384-387]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    # Bước 1: Lấy code từ repository
+    - uses: actions/checkout@v4
+
+    # Bước 2: Cấu hình môi trường Java (JDK 17) có sử dụng Cache để tăng tốc [cite: 364-368]
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    # Bước 3: Thực thi Maven (Clean, Test và Package)
+    # Tại bước này, nếu bạn đã tạo Unit Test có đường dẫn cứng (Hard-coded paths),
+    # nó sẽ chạy thành công trên OS tương ứng nhưng sẽ báo lỗi (Fail) trên các OS khác[cite: 34, 411, 414].
+    - name: Build with Maven
+      run: mvn -B clean package
+
+    # Bước 4: Lưu trữ kết quả (Artifacts) [cite: 391-399]
+    # Ta đặt tên artifact kèm theo tên OS để phân biệt kết quả của từng môi trường
+    - name: Upload Build Artifact
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: project-jar-${{ matrix.os }}
+        path: target/*.jar
