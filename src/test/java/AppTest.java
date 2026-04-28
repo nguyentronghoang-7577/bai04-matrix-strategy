@@ -8,7 +8,8 @@ public class AppTest {
         String folder = "data";
         String file = "test.txt";
 
-        String expected = "data\\test.txt";
+        // String expected = "data\\test.txt";
+        String expected = "data" + File.separator + "test.txt";
         String actual = App.getFilePath(folder, file);
 
         // In ra log để kiểm tra trên GitHub Actions
